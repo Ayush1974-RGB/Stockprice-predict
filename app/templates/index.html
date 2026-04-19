@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stock Price Prediction </title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+<!-- ══════════════  SIDEBAR  ══════════════ -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+        <rect width="34" height="34" rx="10" fill="url(#lg1)"/>
+        <polyline points="5,26 11,15 17,19 23,9 29,13" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs><linearGradient id="lg1" x1="0" y1="0" x2="34" y2="34"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#A855F7"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div>
+      <div class="sb-name">StockML</div>
+  
+    </div>
+  </div>
+
+  <div class="sb-label">NAVIGATION</div>
+
+  <nav class="sb-nav">
+    <div class="sb-item active" data-step="0" onclick="activateStep(0)">
+      <div class="sb-badge"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/></svg></div>
+      <div class="sb-item-info"><div class="sb-title">Dashboard</div><div class="sb-desc">Project overview</div></div>
+      <div class="sb-check hidden" id="check-0">✓</div>
+    </div>
+
+    <div class="sb-connector"></div>
+
+    <div class="sb-item" data-step="1" onclick="activateStep(1)">
+      <div class="sb-badge"><span>1</span></div>
+      <div class="sb-item-info"><div class="sb-title">Preprocessing</div><div class="sb-desc">Clean &amp; normalize</div></div>
+      <div class="sb-check hidden" id="check-1">✓</div>
+    </div>
+    <div class="sb-connector"></div>
+    <div class="sb-item" data-step="2" onclick="activateStep(2)">
+      <div class="sb-badge"><span>2</span></div>
+      <div class="sb-item-info"><div class="sb-title">EDA</div><div class="sb-desc">Explore patterns</div></div>
+      <div class="sb-check hidden" id="check-2">✓</div>
+    </div>
+    <div class="sb-connector"></div>
+    <div class="sb-item" data-step="3" onclick="activateStep(3)">
+      <div class="sb-badge"><span>3</span></div>
+      <div class="sb-item-info"><div class="sb-title">Features</div><div class="sb-desc">Technical indicators</div></div>
+      <div class="sb-check hidden" id="check-3">✓</div>
+    </div>
+    <div class="sb-connector"></div>
+    <div class="sb-item" data-step="4" onclick="activateStep(4)">
+      <div class="sb-badge"><span>4</span></div>
+      <div class="sb-item-info"><div class="sb-title">Training</div><div class="sb-desc">XGBoost model</div></div>
+      <div class="sb-check hidden" id="check-4">✓</div>
+    </div>
+    <div class="sb-connector"></div>
+    <div class="sb-item" data-step="5" onclick="activateStep(5)">
+      <div class="sb-badge"><span>5</span></div>
+      <div class="sb-item-info"><div class="sb-title">Results</div><div class="sb-desc">Predictions &amp; metrics</div></div>
+      <div class="sb-check hidden" id="check-5">✓</div>
+    </div>
+  </nav>
+
+  <div class="sb-divider"></div>
+  <div class="sb-label">QUICK RUN</div>
+
+  <button class="run-btn" id="btn-run-all">
+    <svg width="13" height="13" viewBox="0 0 13 13"><polygon points="2,1 12,6.5 2,12" fill="white"/></svg>
+    Run Full Pipeline
+  </button>
+
+  <div class="sb-metrics hidden" id="sb-metrics">
+    <div class="sbm-title">LIVE RESULTS</div>
+    <div class="sbm-grid">
+      <div class="sbm-item"><div class="sbm-l">R²</div><div class="sbm-v green" id="sbm-r2">—</div></div>
+      <div class="sbm-item"><div class="sbm-l">RMSE</div><div class="sbm-v blue" id="sbm-rmse">—</div></div>
+      <div class="sbm-item"><div class="sbm-l">MAE</div><div class="sbm-v purple" id="sbm-mae">—</div></div>
+      <div class="sbm-item"><div class="sbm-l">MAPE</div><div class="sbm-v orange" id="sbm-mape">—</div></div>
+    </div>
+  </div>
+
+  <!-- Team Credits -->
+  <div class="sb-team">
+    <div class="sb-label" style="padding-top:0">MADE BY</div>
+    <div class="team-member"><div class="tm-dot indigo"></div><span>Ayush Singhal(2408030022)</span></div>
+    <div class="team-member"><div class="tm-dot purple"></div><span>Aarav Jai(2408030006)</span></div>
+    <div class="team-member"><div class="tm-dot teal"></div><span>Shivansh Saxena(2408030013)</span></div>
+  </div>
+
+  <div class="sb-footer">
+    <div class="sf-live"><span class="sf-dot"></span>Model Active</div>
+    <div class="sf-stack">XGBoost · Flask · Python</div>
+  </div>
+</aside>
+
+<!-- ══════════════  MAIN AREA  ══════════════ -->
+<main class="main">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="tb-left">
+      <span class="tb-crumb" id="tb-step-label">Dashboard</span>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="4,2 8,6 4,10" stroke="#64748B" stroke-width="1.5" fill="none"/></svg>
+      <span class="tb-title" id="tb-title">Project Overview</span>
+    </div>
+    <div class="tb-right">
+      <div class="badge green-badge"><span class="pdot"></span>Live</div>
+      <div class="badge">5,306 records</div>
+    </div>
+  </header>
+
+  <!-- ══  PANEL 0: DASHBOARD  ══ -->
+  <section class="panel active" id="panel-0">
+    <div class="dash-hero">
+      <div class="dh-left">
+        <div class="dh-eyebrow">AI · ML · Time Series Forecasting</div>
+        <h1 class="dh-title"> Stock Price<br/>Prediction System</h1>
+        <p class="dh-desc">An end-to-end supervised machine learning pipeline that predicts CIPLA stock closing prices using XGBoost Regression on 21 years of NSE historical data.</p>
+        <div class="dh-actions">
+          <button class="btn-primary" onclick="activateStep(1)">Start Pipeline →</button>
+          <button class="btn-ghost" id="dash-run-all">Run All Steps</button>
+        </div>
+      </div>
+      <div class="dh-right">
+        <div class="dh-chart-mock">
+          <svg viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="cg1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6366F1" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#6366F1" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,140 C20,138 40,130 60,118 C80,106 100,95 120,80 C140,65 160,55 180,45 C200,35 220,28 240,20 C260,12 280,8 320,5 L320,160 L0,160 Z" fill="url(#cg1)"/>
+            <polyline points="0,140 60,118 120,80 180,45 240,20 320,5" stroke="#6366F1" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Prediction line -->
+            <polyline points="0,142 60,120 120,83 180,48 240,22 320,7" stroke="#A855F7" stroke-width="2" fill="none" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+            <circle cx="240" cy="20" r="4" fill="#6366F1"/>
+            <circle cx="320" cy="5" r="4" fill="#A855F7"/>
+          </svg>
+          <div class="dh-chart-legend">
+            <span class="leg-dot indigo-dot"></span><span>Actual</span>
+            <span class="leg-dot purple-dot"></span><span>Predicted</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Problem Statement -->
+    <div class="dash-problem">
+      <div class="dp-icon">🎯</div>
+      <div>
+        <div class="dp-title">Problem Statement</div>
+        <div class="dp-text">Given historical OHLCV data for CIPLA (NSE), predict the next day's closing price using supervised regression techniques. The model must generalize to unseen future data and minimize prediction error as measured by RMSE and MAPE.</div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="dash-stats">
+      <div class="ds-card">
+        <div class="ds-num indigo">5,306</div>
+        <div class="ds-label">Trading Days</div>
+        <div class="ds-sub">2000 – 2021</div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-num purple">26</div>
+        <div class="ds-label">Features</div>
+        <div class="ds-sub">MA, RSI, MACD, lags</div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-num teal">XGBoost</div>
+        <div class="ds-label">Algorithm</div>
+        <div class="ds-sub">Gradient Boosting</div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-num green">99.8%</div>
+        <div class="ds-label">R² Score</div>
+        <div class="ds-sub">Variance explained</div>
+      </div>
+      <div class="ds-card">
+        <div class="ds-num gold">0.56%</div>
+        <div class="ds-label">MAPE</div>
+        <div class="ds-sub">Mean abs % error</div>
+      </div>
+    </div>
+
+    <!-- Pipeline overview cards -->
+    <div class="dash-pipeline">
+      <div class="dp-title2">ML Pipeline</div>
+      <div class="pipe-cards">
+        <div class="pipe-card" onclick="activateStep(1)">
+          <div class="pc-num">01</div>
+          <div class="pc-icon">🧹</div>
+          <div class="pc-title">Preprocessing</div>
+          <div class="pc-desc">Drop noise, fill gaps, normalize OHLCV</div>
+          <div class="pc-arrow">→</div>
+        </div>
+        <div class="pipe-card" onclick="activateStep(2)">
+          <div class="pc-num">02</div>
+          <div class="pc-icon">📊</div>
+          <div class="pc-title">EDA</div>
+          <div class="pc-desc">Price trends, volume, correlations</div>
+          <div class="pc-arrow">→</div>
+        </div>
+        <div class="pipe-card" onclick="activateStep(3)">
+          <div class="pc-num">03</div>
+          <div class="pc-icon">⚙️</div>
+          <div class="pc-title">Features</div>
+          <div class="pc-desc">MA, EMA, MACD, RSI, lag values</div>
+          <div class="pc-arrow">→</div>
+        </div>
+        <div class="pipe-card" onclick="activateStep(4)">
+          <div class="pc-num">04</div>
+          <div class="pc-icon">🤖</div>
+          <div class="pc-title">Training</div>
+          <div class="pc-desc">XGBoost with 300 estimators</div>
+          <div class="pc-arrow">→</div>
+        </div>
+        <div class="pipe-card last" onclick="activateStep(5)">
+          <div class="pc-num">05</div>
+          <div class="pc-icon">📈</div>
+          <div class="pc-title">Results</div>
+          <div class="pc-desc">RMSE ₹4.77 · R² 0.9981</div>
+          <div class="pc-arrow">🏆</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="next-bar">
+      <button class="next-btn" onclick="activateStep(1)">
+        Begin: Step 1 — Preprocessing
+        <svg width="16" height="16" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ══  PANEL 1: PREPROCESSING  ══ -->
+  <section class="panel" id="panel-1">
+    <div class="panel-hero">
+      <div>
+        <h1 class="ph-title">Data Preprocessing</h1>
+        <p class="ph-sub">Remove irrelevant columns, handle missing values, sort chronologically, and normalize OHLCV features for CIPLA NSE data.</p>
+      </div>
+      <button class="action-btn" id="btn-preprocess">
+        <svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 1v13M1 7.5h13" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        Run Preprocessing
+      </button>
+    </div>
+
+    <div class="spin-wrap hidden" id="spin-1">
+      <div class="ring"></div><div class="spin-lbl">Processing 5,306 records…</div>
+    </div>
+
+    <div class="result hidden" id="result-1">
+      <div class="kpi-row" id="pre-kpis"></div>
+      <div class="two-col">
+        <div class="card fade-in">
+          <div class="card-hd"><div class="ci red-ci">🗑</div>Dropped Columns</div>
+          <div id="dropped-cols" class="tag-wrap"></div>
+        </div>
+        <div class="card fade-in" style="animation-delay:.1s">
+          <div class="card-hd"><div class="ci green-ci">✓</div>Retained Columns</div>
+          <div id="kept-cols" class="tag-wrap"></div>
+        </div>
+      </div>
+      <div class="card fade-in" style="animation-delay:.15s">
+        <div class="card-hd"><div class="ci blue-ci">⚠</div>Missing Values — Before Cleaning</div>
+        <div id="missing-bars"></div>
+      </div>
+      <div class="card fade-in" style="animation-delay:.2s">
+        <div class="card-hd"><div class="ci purple-ci">👁</div>Dataset Sample — First 5 Rows</div>
+        <div class="tscroll" id="pre-table"></div>
+      </div>
+      <div class="next-bar">
+        <button class="next-btn" onclick="activateStep(2)">
+          Next: Step 2 — Exploratory Data Analysis
+          <svg width="16" height="16" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══  PANEL 2: EDA  ══ -->
+  <section class="panel" id="panel-2">
+    <div class="panel-hero">
+      <div>
+        <h1 class="ph-title">Exploratory Data Analysis</h1>
+        <p class="ph-sub">Visualize 21 years of CIPLA price movements — trends, volume, candlesticks, and feature correlations.</p>
+      </div>
+      <button class="action-btn" id="btn-eda">
+        <svg width="15" height="15" viewBox="0 0 15 15"><polyline points="1,11 5,6 9,9 13,2" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        Run EDA
+      </button>
+    </div>
+
+    <div class="spin-wrap hidden" id="spin-2">
+      <div class="ring"></div><div class="spin-lbl">Generating visualizations…</div>
+    </div>
+
+    <div class="result hidden" id="result-2">
+      <div class="kpi-row" id="eda-kpis"></div>
+      <div class="plot-grid" id="eda-plots"></div>
+      <div class="next-bar">
+        <button class="next-btn" onclick="activateStep(3)">
+          Next: Step 3 — Feature Engineering
+          <svg width="16" height="16" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══  PANEL 3: FEATURES  ══ -->
+  <section class="panel" id="panel-3">
+    <div class="panel-hero">
+      <div>
+        <h1 class="ph-title">Feature Engineering</h1>
+        <p class="ph-sub">Create 26 time-series features — MA, EMA, MACD, RSI-14, lag values, volatility — to capture temporal stock dependencies.</p>
+      </div>
+      <button class="action-btn" id="btn-features">
+        <svg width="15" height="15" viewBox="0 0 15 15"><rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="white" stroke-width="1.8" fill="none"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1" stroke="white" stroke-width="1.8" fill="none"/><rect x="1" y="8.5" width="5.5" height="5.5" rx="1" stroke="white" stroke-width="1.8" fill="none"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1" stroke="white" stroke-width="1.8" fill="none"/></svg>
+        Engineer Features
+      </button>
+    </div>
+
+    <div class="spin-wrap hidden" id="spin-3">
+      <div class="ring"></div><div class="spin-lbl">Computing technical indicators…</div>
+    </div>
+
+    <div class="result hidden" id="result-3">
+      <div class="kpi-row" id="feat-kpis"></div>
+      <div id="feat-groups"></div>
+      <div class="next-bar">
+        <button class="next-btn" onclick="activateStep(4)">
+          Next: Step 4 — Train XGBoost Model
+          <svg width="16" height="16" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══  PANEL 4: TRAINING  ══ -->
+  <section class="panel" id="panel-4">
+    <div class="panel-hero">
+      <div>
+        <h1 class="ph-title">XGBoost Model Training</h1>
+        <p class="ph-sub">Train gradient boosted trees on 4,200+ records with chronological 80/20 split and StandardScaler normalization.</p>
+      </div>
+      <button class="action-btn" id="btn-train">
+        <svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 1L2 4v7l5.5 3 5.5-3V4z" stroke="white" stroke-width="1.8" fill="none"/><path d="M7.5 1v13M2 4l5.5 3.5L13 4" stroke="white" stroke-width="1.4" fill="none"/></svg>
+        Train Model
+      </button>
+    </div>
+
+    <div class="spin-wrap hidden" id="spin-4">
+      <div class="ring"></div><div class="spin-lbl">Training boosted trees (~20s)…</div>
+    </div>
+
+    <div class="result hidden" id="result-4">
+      <div class="kpi-row" id="train-kpis"></div>
+      <div class="two-col">
+        <div class="card fade-in">
+          <div class="card-hd"><div class="ci blue-ci">⚙</div>Hyperparameters</div>
+          <div id="hyperparams"></div>
+        </div>
+        <div class="card fade-in" style="animation-delay:.1s">
+          <div class="card-hd"><div class="ci gold-ci">★</div>Top Feature Importances</div>
+          <div id="imp-bars"></div>
+        </div>
+      </div>
+      <div class="next-bar">
+        <button class="next-btn" onclick="activateStep(5)">
+          Final: Step 5 — View Predictions &amp; Results
+          <svg width="16" height="16" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══  PANEL 5: RESULTS  ══ -->
+  <section class="panel" id="panel-5">
+    <div class="panel-hero">
+      <div>
+        <h1 class="ph-title">Predictions &amp; Evaluation</h1>
+        <p class="ph-sub">Model performance on 1,052 unseen trading days — actual vs predicted prices with RMSE, MAE, R², MAPE metrics.</p>
+      </div>
+      <button class="action-btn" id="btn-evaluate">
+        <svg width="15" height="15" viewBox="0 0 15 15"><polyline points="1,11 5,6 9,9 13,2" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="2" r="2" fill="white"/></svg>
+        Evaluate Model
+      </button>
+    </div>
+
+    <div class="spin-wrap hidden" id="spin-5">
+      <div class="ring"></div><div class="spin-lbl">Computing predictions on test set…</div>
+    </div>
+
+    <div class="result hidden" id="result-5">
+      <div class="kpi-row" id="eval-kpis"></div>
+      <div class="plot-grid" id="eval-plots"></div>
+      <div class="card fade-in">
+        <div class="card-hd"><div class="ci purple-ci">📋</div>Last 30 Predictions — Actual vs Predicted</div>
+        <div class="tscroll" id="pred-table"></div>
+      </div>
+      <div class="next-bar">
+        <button class="next-btn green-btn" onclick="activateStep(0)">
+          🏆 View Dashboard Summary
+          <svg width="16" height="16" viewBox="0 0 16 16"><polyline points="6,3 11,8 6,13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══  PIPELINE OVERLAY  ══ -->
+<div class="overlay hidden" id="overlay">
+  <div class="ov-modal">
+    <div class="ov-icon">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <rect width="52" height="52" rx="15" fill="url(#ovg)"/>
+        <polyline points="8,39 16,22 24,29 34,13 44,18" stroke="white" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs><linearGradient id="ovg" x1="0" y1="0" x2="52" y2="52"><stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#A855F7"/></linearGradient></defs>
+      </svg>
+    </div>
+    <h2>Running Full Pipeline</h2>
+    <p>Training XGBoost on 5,306 CIPLA trading days…</p>
+    <div class="ov-steps">
+      <div class="ovs" id="ovs-1"><div class="ovs-dot"></div><span>Preprocessing data</span></div>
+      <div class="ovs" id="ovs-2"><div class="ovs-dot"></div><span>Running EDA</span></div>
+      <div class="ovs" id="ovs-3"><div class="ovs-dot"></div><span>Engineering features</span></div>
+      <div class="ovs" id="ovs-4"><div class="ovs-dot"></div><span>Training XGBoost</span></div>
+      <div class="ovs" id="ovs-5"><div class="ovs-dot"></div><span>Evaluating model</span></div>
+    </div>
+    <div class="ov-bar-bg"><div class="ov-bar" id="ov-bar"></div></div>
+    <div class="ov-pct" id="ov-pct">0%</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
